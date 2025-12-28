@@ -163,3 +163,4 @@ cython_debug/
 # http-client.env files
 http-client.private.env.json
 http-client.env.json
+env/data/

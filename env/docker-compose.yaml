@@ -156,7 +156,7 @@ services:
     command: >
       bash -c '
         echo "start!"
-        cd ~/app/mecab_ko_dic/;
+        cd ~/app/${USER_NAME}/;
         ln -s ./mecab-0.996-ko-0.9.2 ./mecab;
         ln -s ./mecab-ko-dic-2.1.1-20180720 ./mecab-ko-dic;
         cd ./mecab;
@@ -175,8 +175,8 @@ services:
         sudo make install;
         mecab -D;
 
-        cd /home/mecab-ko-dic-admin/app/mecab_ko_dic/lucene-solr/lucene/analysis/nori;
-        mkdir -p /home/mecab_ko_dic_admin/.ant/lib;
+        cd /home/${USER_NAME}/app/mecab_ko_dic/lucene-solr/lucene/analysis/nori;
+        mkdir -p /home/${USER_NAME}/.ant/lib;
         ant ivy-bootstrap;
         ant regenerate;
 

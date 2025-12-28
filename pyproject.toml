@@ -1,28 +1,17 @@
-[tool.poetry]
-name = "mecab-admin"
+[project]
+name = "mecab-ko-dic-admin"
 version = "0.1.0"
-description = ""
-authors = ["baekhum.19 <baekhum.19@gmail.com>"]
+description = "Add your description here"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.11"
-poetry = "^1.8.3"
-Django = "^5.0.6"
-django-environ = "^0.11.2"
-django-ninja = "^1.1.0"
-psycopg2 = "^2.9.9"
-
-
-[tool.poetry.group.dev.dependencies]
-jupyter = "^1.0.0"
-pytest = "^8.2.1"
-flake8 = "^7.0.0"
-pyflakes = "^3.2.0"
-coverage = "^7.5.1"
-pyproject-flake8 = "^7.0.0"
-pycodestyle = "^2.11.1"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+authors = ["baekhum.19 <baekhum.19@gmail.com>"]
+requires-python = ">=3.12"
+dependencies = [
+    "django-environ>=0.11.2",
+    "django-ninja>=1.3.0",
+    "django>=5.1",
+    "jupyter>=1.1.1",
+    "pre-commit>=3.8.0",
+    "psycopg2-binary>=2.9.9",
+    "pytest>=8.3.2",
+    "ruff>=0.6.3",
+]

@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import os
-import environ
 from pathlib import Path
+
+import environ
 
 # Build paths inside the project like this: BASE_DIR / "subdir".
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "mecab_ko_dic",
 ]
 
 MIDDLEWARE = [
@@ -84,7 +86,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": env("DB_NAME", default="mecab_ko_dic"),
-        "USER": env("DB_USER", default="admin"),
+        "USER": env("DB_USER", default="mecab_ko_dic"),
         "PASSWORD": env("DB_PASSWORD", default="admin1@3"),
         "HOST": env("DB_HOST", default="0.0.0.0"),
         "PORT": env("DB_PORT", default=6543),
