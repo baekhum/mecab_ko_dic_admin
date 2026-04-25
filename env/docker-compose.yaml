@@ -57,7 +57,7 @@ services:
         STACK_VERSION: ${STACK_VERSION}
     depends_on:
       es_setup:
-        condition: service_healthy
+        condition: service_completed_successfully
     volumes:
       - $ELASTIC_CERTS_DIR:/usr/share/elasticsearch/config/certs
       - $ELASTIC_DATA_DIR:/usr/share/elasticsearch/data
@@ -127,14 +127,14 @@ services:
       timeout: 10s
       retries: 120
   solr01:
-    image: solr:latest
+    image: solr:${SOLR_VERSION}
     volumes:
       - $SOLR_DATA_DIR:/var/solr/data
       - $SOLR_CONFIG_DIR:/var/solr/configsets
     ports:
       - "8983:8983"    
   postgres:
-    image: postgres:latest
+    image: postgres:${POSTGRES_VERSION}
     environment:
       POSTGRES_USER: $POSTGRES_USER
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
@@ -153,33 +153,5 @@ services:
     image: ubuntun_mecab_ko_dic_builder:latest    
     volumes:
       - $UBUNTU_DATA_DIR:/home/$USER_NAME/app
-    command: >
-      bash -c '
-        echo "start!"
-        cd ~/app/${USER_NAME}/;
-        ln -s ./mecab-0.996-ko-0.9.2 ./mecab;
-        ln -s ./mecab-ko-dic-2.1.1-20180720 ./mecab-ko-dic;
-        cd ./mecab;
-        wget -O config.guess "http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD";
-        wget -O config.sub "http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD";
-        ./configure;
-        make;
-        make check;
-        sudo make install;
-
-        sudo ldconfig;
-
-        cd ../mecab-ko-dic;
-        ./configure;
-        make;
-        sudo make install;
-        mecab -D;
-
-        cd /home/${USER_NAME}/app/mecab_ko_dic/lucene-solr/lucene/analysis/nori;
-        mkdir -p /home/${USER_NAME}/.ant/lib;
-        ant ivy-bootstrap;
-        ant regenerate;
-
-        echo "done!"
-      '
-      
+    tty: true
+    stdin_open: true
