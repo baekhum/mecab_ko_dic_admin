@@ -73,3 +73,37 @@ class Mecab_Ko_Dic(models.Model):
 
     def __str__(self):
         return self.표층형
+
+
+class SynonymGroup(models.Model):
+    name = models.CharField(max_length=100, db_column="name")
+    created_at = models.DateTimeField(auto_now_add=True, db_column="created_at")
+
+    class Meta:
+        db_table = "synonym_group"
+
+    def __str__(self):
+        return self.name
+
+
+class SynonymWord(models.Model):
+    group = models.ForeignKey(
+        SynonymGroup, related_name="words", on_delete=models.CASCADE, db_column="group_id"
+    )
+    word = models.CharField(max_length=100, db_column="word")
+
+    class Meta:
+        db_table = "synonym_word"
+
+    def __str__(self):
+        return self.word
+
+
+class Stopword(models.Model):
+    word = models.CharField(max_length=100, unique=True, db_column="word")
+
+    class Meta:
+        db_table = "stopword"
+
+    def __str__(self):
+        return self.word

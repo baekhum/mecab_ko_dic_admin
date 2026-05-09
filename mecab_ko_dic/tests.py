@@ -1,5 +1,5 @@
 from django.test import TestCase
-from mecab_ko_dic.models import Mecab_Ko_Dic, OriginType
+from mecab_ko_dic.models import Mecab_Ko_Dic, OriginType, SynonymGroup, SynonymWord, Stopword
 
 # Create your tests here.
 
@@ -15,3 +15,14 @@ class MecabModelTest(TestCase):
         )
         self.assertEqual(entry.origin_type, "USER")
         self.assertTrue(entry.is_active)
+
+class SearchDicTest(TestCase):
+    def test_synonym_group_and_words(self):
+        group = SynonymGroup.objects.create(name="휴대폰 그룹")
+        SynonymWord.objects.create(group=group, word="휴대폰")
+        SynonymWord.objects.create(group=group, word="핸드폰")
+        self.assertEqual(group.words.count(), 2)
+
+    def test_stopword(self):
+        sw = Stopword.objects.create(word="그리고")
+        self.assertEqual(sw.word, "그리고")
