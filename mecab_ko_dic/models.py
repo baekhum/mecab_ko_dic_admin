@@ -76,11 +76,13 @@ class Mecab_Ko_Dic(models.Model):
 
 
 class SynonymGroup(models.Model):
-    name = models.CharField(max_length=100, db_column="name")
-    created_at = models.DateTimeField(auto_now_add=True, db_column="created_at")
+    name = models.CharField(max_length=100, unique=True, verbose_name="그룹명", db_column="name")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="생성일", db_column="created_at")
 
     class Meta:
         db_table = "synonym_group"
+        verbose_name = "동의어 그룹"
+        verbose_name_plural = "동의어 그룹 목록"
 
     def __str__(self):
         return self.name
@@ -88,22 +90,31 @@ class SynonymGroup(models.Model):
 
 class SynonymWord(models.Model):
     group = models.ForeignKey(
-        SynonymGroup, related_name="words", on_delete=models.CASCADE, db_column="group_id"
+        SynonymGroup,
+        related_name="words",
+        on_delete=models.CASCADE,
+        db_column="group_id",
+        verbose_name="동의어 그룹",
     )
-    word = models.CharField(max_length=100, db_column="word")
+    word = models.CharField(max_length=100, verbose_name="단어", db_column="word")
 
     class Meta:
         db_table = "synonym_word"
+        verbose_name = "동의어 단어"
+        verbose_name_plural = "동의어 단어 목록"
+        unique_together = (("group", "word"),)
 
     def __str__(self):
         return self.word
 
 
 class Stopword(models.Model):
-    word = models.CharField(max_length=100, unique=True, db_column="word")
+    word = models.CharField(max_length=100, unique=True, verbose_name="불용어", db_column="word")
 
     class Meta:
         db_table = "stopword"
+        verbose_name = "불용어"
+        verbose_name_plural = "불용어 목록"
 
     def __str__(self):
         return self.word

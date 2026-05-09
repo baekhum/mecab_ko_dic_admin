@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.db.utils import IntegrityError
 from mecab_ko_dic.models import Mecab_Ko_Dic, OriginType, SynonymGroup, SynonymWord, Stopword
 
 # Create your tests here.
@@ -23,6 +24,29 @@ class SearchDicTest(TestCase):
         SynonymWord.objects.create(group=group, word="핸드폰")
         self.assertEqual(group.words.count(), 2)
 
+    def test_synonym_group_unique_name(self):
+        SynonymGroup.objects.create(name="유니크 그룹")
+        with self.assertRaises(IntegrityError):
+            SynonymGroup.objects.create(name="유니크 그룹")
+
+    def test_synonym_word_unique_together(self):
+        group = SynonymGroup.objects.create(name="그룹")
+        SynonymWord.objects.create(group=group, word="단어")
+        with self.assertRaises(IntegrityError):
+            SynonymWord.objects.create(group=group, word="단어")
+
+    def test_synonym_group_cascade_delete(self):
+        group = SynonymGroup.objects.create(name="삭제그룹")
+        SynonymWord.objects.create(group=group, word="삭제단어")
+        word_id = SynonymWord.objects.get(word="삭제단어").id
+        group.delete()
+        self.assertFalse(SynonymWord.objects.filter(id=word_id).exists())
+
     def test_stopword(self):
         sw = Stopword.objects.create(word="그리고")
         self.assertEqual(sw.word, "그리고")
+
+    def test_stopword_unique(self):
+        Stopword.objects.create(word="불용어")
+        with self.assertRaises(IntegrityError):
+            Stopword.objects.create(word="불용어")
