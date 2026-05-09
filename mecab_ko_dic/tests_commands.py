@@ -1,6 +1,6 @@
 import os
 import tempfile
-from django.core.management import call_command
+from django.core.management import call_command, CommandError
 from django.test import TestCase
 from mecab_ko_dic.models import Mecab_Ko_Dic, OriginType
 
@@ -39,6 +39,56 @@ class ImportMecabCsvTest(TestCase):
             self.assertEqual(entry2.타입, "Preanalysis")
             self.assertEqual(entry2.표현, "라마/NNP/*+바/NNP/*")
             self.assertEqual(entry2.origin_type, OriginType.USER)
+
+        finally:
+            if os.path.exists(tmp_file_path):
+                os.remove(tmp_file_path)
+
+    def test_import_malformed_csv(self):
+        # Line 1: Good
+        # Line 2: Missing fields (less than 5)
+        # Line 3: pos_tag too long (> 4 chars)
+        # Line 4: Invalid pos_tag (not in PosTag choices)
+        csv_content = (
+            "정상,0,0,0,NNG,*,T,정상,*,*,*,*\n"
+            "오류1,0,0,0\n"
+            "오류2,0,0,0,TOOLONG,*,T,오류2,*,*,*,*\n"
+            "오류3,0,0,0,ZZZ,*,T,오류3,*,*,*,*\n"
+        )
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as f:
+            f.write(csv_content)
+            tmp_file_path = f.name
+
+        try:
+            with self.assertRaises(CommandError) as cm:
+                call_command("import_mecab_csv", tmp_file_path)
+            
+            self.assertIn("Import failed with 3 errors", str(cm.exception))
+            # Due to transaction.atomic, no records should be saved
+            self.assertEqual(Mecab_Ko_Dic.objects.count(), 0)
+
+        finally:
+            if os.path.exists(tmp_file_path):
+                os.remove(tmp_file_path)
+
+    def test_import_with_encoding(self):
+        # Test importing with EUC-KR encoding
+        csv_content = "한글,0,0,0,NNG,*,T,한글,*,*,*,*\n"
+        
+        with tempfile.NamedTemporaryFile(mode="wb", suffix=".csv", delete=False) as f:
+            f.write(csv_content.encode("euc-kr"))
+            tmp_file_path = f.name
+
+        try:
+            # Should fail with utf-8 (default)
+            with self.assertRaises(CommandError):
+                call_command("import_mecab_csv", tmp_file_path, encoding="utf-8")
+            
+            # Should succeed with euc-kr
+            call_command("import_mecab_csv", tmp_file_path, encoding="euc-kr")
+            self.assertEqual(Mecab_Ko_Dic.objects.count(), 1)
+            self.assertEqual(Mecab_Ko_Dic.objects.get().표층형, "한글")
 
         finally:
             if os.path.exists(tmp_file_path):
