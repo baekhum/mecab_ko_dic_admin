@@ -1,7 +1,5 @@
 from django.db import models
 
-from django.db import models
-
 
 class PosTag(models.TextChoices):
     NNG = "NNG", "일반 명사"
@@ -43,7 +41,7 @@ class PosTag(models.TextChoices):
     SSO = "SSO", "여는 괄호 (, ["
     SSC = "SSC", "닫는 괄호 ), ]"
     SC = "SC", "구분자 , · / :"
-    SY = "SY", ""
+    SY = "SY", "기호"
     SL = "SL", "외국어"
     SH = "SH", "한자"
     SN = "SN", "숫자"
