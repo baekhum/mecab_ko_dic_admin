@@ -54,11 +54,11 @@ class OriginType(models.TextChoices):
 
 
 class Mecab_Ko_Dic(models.Model):
-    표층형 = models.CharField(max_length=100, db_column="surface_form")
-    품사_태그 = models.CharField(max_length=4, choices=PosTag.choices, db_column="pos_tag")
+    표층형 = models.CharField(max_length=100, db_column="surface_form", db_index=True)
+    품사_태그 = models.CharField(max_length=4, choices=PosTag.choices, db_column="pos_tag", db_index=True)
     의미_부류 = models.CharField(max_length=100, blank=True, null=True, db_column="semantic_class")
     종성_유무 = models.CharField(max_length=1, db_column="final_consonant")
-    읽기 = models.CharField(max_length=100, db_column="reading")
+    읽기 = models.CharField(max_length=100, db_column="reading", db_index=True)
     타입 = models.CharField(max_length=100, blank=True, null=True, db_column="type")
     첫번째_품사 = models.CharField(max_length=100, blank=True, null=True, db_column="first_pos")
     마지막_품사 = models.CharField(max_length=100, blank=True, null=True, db_column="last_pos")
@@ -68,8 +68,10 @@ class Mecab_Ko_Dic(models.Model):
         choices=OriginType.choices,
         default=OriginType.SYSTEM,
         db_column="origin_type",
+        db_index=True,
+        verbose_name="출처",
     )
-    is_active = models.BooleanField(default=True, db_column="is_active")
+    is_active = models.BooleanField(default=True, db_column="is_active", db_index=True, verbose_name="활성 여부")
 
     def __str__(self):
         return self.표층형
