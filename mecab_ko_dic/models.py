@@ -49,6 +49,12 @@ class PosTag(models.TextChoices):
     SN = "SN", "숫자"
 
 
+class OriginType(models.TextChoices):
+    SYSTEM = "SYSTEM", "시스템"
+    USER = "USER", "사용자"
+    COMPOUND = "COMPOUND", "복합명사"
+
+
 class Mecab_Ko_Dic(models.Model):
     표층형 = models.CharField(max_length=100, db_column="surface_form")
     품사_태그 = models.CharField(max_length=4, choices=PosTag.choices, db_column="pos_tag")
@@ -59,6 +65,13 @@ class Mecab_Ko_Dic(models.Model):
     첫번째_품사 = models.CharField(max_length=100, blank=True, null=True, db_column="first_pos")
     마지막_품사 = models.CharField(max_length=100, blank=True, null=True, db_column="last_pos")
     표현 = models.CharField(max_length=255, blank=True, null=True, db_column="expression")
+    origin_type = models.CharField(
+        max_length=10,
+        choices=OriginType.choices,
+        default=OriginType.SYSTEM,
+        db_column="origin_type",
+    )
+    is_active = models.BooleanField(default=True, db_column="is_active")
 
     def __str__(self):
         return self.표층형
