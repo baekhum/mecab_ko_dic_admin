@@ -1,39 +1,34 @@
-FROM ubuntu:latest
+FROM ubuntu:24.04
+
 ARG USER_NAME
 ARG UID
 ARG GID
 
-# Update the package list, install sudo, create a non-root user, and grant password-less sudo permissions
-RUN apt clean && \
-    apt update && \
-    apt install -y sudo vim git
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN echo "UID: $UID"
-RUN echo "GID: $GID"
-# RUN /bin/bash -c 'if ! getent group $(id -g) ; then groupadd -g $(id -g) mecab_ko_dic_admin; else GID="$(id -g)00"; groupadd -g $GID mecab_ko_dic_admin; fi' && \
-RUN if ! getent group $GID ; then groupadd -g $GID $USER_NAME; else GID="${GID}00"; groupadd -g $GID $USER_NAME; fi && \     
+# 1. 필수 빌드 도구 및 라이브러리 설치
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    autotools-dev \
+    automake \
+    libtool \
+    git \
+    vim \
+    wget \
+    curl \
+    sudo \
+    openjdk-21-jdk \
+    ant \
+    ivy \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. 사용자 설정
+RUN if ! getent group $GID ; then groupadd -g $GID $USER_NAME; else GID="${GID}00"; groupadd -g $GID $USER_NAME; fi && \
     useradd -u $UID -g $GID --create-home --shell /bin/bash $USER_NAME && \
     echo "${USER_NAME} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-RUN apt clean && \
-    apt install build-essential autogen -y
-
-RUN apt clean && \
-    apt install -y wget apt-transport-https gnupg && \
-    wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | apt-key add - && \
-    echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list && \
-    apt update && \
-    apt install -y temurin-8-jdk && \
-    apt install -y ant ivy && \
-    apt install -y gradle
-
-# Set the non-root user as the default user
 USER $USER_NAME
-
-# Set the working directory
 WORKDIR /home/$USER_NAME/app
 
-# Copy files into the container and set the appropriate permissions
-COPY --chown=$USER_NAME:$USER_NAME . /home/$USER_NAME/app
-RUN chmod -R 755 /home/$USER_NAME/app 
-ENTRYPOINT ["/bin/bash", "-c", "echo Hello, World!; tail -f /dev/null"]
+# 컨테이너가 종료되지 않고 대기하도록 설정
+CMD ["/bin/bash", "-c", "tail -f /dev/null"]
