@@ -45,6 +45,9 @@ class PosTag(models.TextChoices):
     SL = "SL", "외국어"
     SH = "SH", "한자"
     SN = "SN", "숫자"
+    NA = "NA", "미정의"
+    UNA = "UNA", "해석불가"
+    VSV = "VSV", "동사 파생 접미사(V)"
 
 
 class OriginType(models.TextChoices):
@@ -53,10 +56,67 @@ class OriginType(models.TextChoices):
     COMPOUND = "COMPOUND", "복합명사"
 
 
+class SemanticClass(models.TextChoices):
+    # 주요 분류
+    NONE = "*", "*"
+    PERSON = "인명", "인명"
+    LOCATION = "지명", "지명"
+    PLACE = "장소", "장소"
+    NUMBER = "수", "수"
+    ACTION = "행위", "행위"
+    ULTRON = "울트론", "울트론"
+    
+    # 세부 분류 및 특수 태그 (시트 및 DB 분석 결과 반영)
+    COINED = "쉬도록", "쉬도록"
+    SENTENCE_ADV = "문장부사", "문장부사"
+    STATUS_CHANGE = "상태변화", "상태변화"
+    STATIC_STATE = "정적사태", "정적사태"
+    
+    # MeCab 특수 분류 (~로 시작)
+    T_NOUN = "~명사", "~명사"
+    T_NUMERAL = "~수사", "~수사"
+    T_NUM_EXPR = "~수표현", "~수표현"
+    T_COUNTABLE = "~가산명사", "~가산명사"
+    T_PROPER = "~고유명사", "~고유명사"
+    T_SPACE = "~공간명사", "~공간명사"
+    T_INSTITUTION = "~기관명사", "~기관명사"
+    T_GROUP = "~단체명사", "~단체명사"
+    T_EVENT = "~사건명사", "~사건명사"
+    T_DETERMINER = "~수관형사", "~수관형사"
+    T_TIME = "~시간명사", "~시간명사"
+    T_PERSON_NOUN = "~인명명사", "~인명명사"
+    T_HUMAN = "~인성명사", "~인성명사"
+    T_PLACE_NOUN = "~장소명사", "~장소명사"
+    T_NON_HUMAN = "~비인성명사", "~비인성명사"
+    T_QUANT_DET = "~양수관형사", "~양수관형사"
+    T_ARTIFACT = "~인공물명사", "~인공물명사"
+    T_DEP_COUNTABLE = "~의존가산명사", "~의존가산명사"
+
+    # 복합 부류
+    SENT_TIME = "문장부사|시간부사", "문장부사|시간부사"
+    SENT_MODAL = "문장부사|양상부사", "문장부사|양상부사"
+    SENT_CONN = "문장부사|접속부사", "문장부사|접속부사"
+    SENT_DEGREE = "문장부사|정도부사", "문장부사|정도부사"
+    COMP_SPACE = "성분부사|공간부사", "성분부사|공간부사"
+    COMP_NEG = "성분부사|부정부사", "성분부사|부정부사"
+    COMP_TIME = "성분부사|시간부사", "성분부사|시간부사"
+    COMP_MODAL = "성분부사|양태부사", "성분부사|양태부사"
+    COMP_DEGREE = "성분부사|정도부사", "성분부사|정도부사"
+    PLACE_TIME = "~장소명사|시간명사", "~장소명사|시간명사"
+
+
 class Mecab_Ko_Dic(models.Model):
     표층형 = models.CharField(max_length=100, db_column="surface_form", db_index=True)
-    품사_태그 = models.CharField(max_length=4, choices=PosTag.choices, db_column="pos_tag", db_index=True)
-    의미_부류 = models.CharField(max_length=100, blank=True, null=True, db_column="semantic_class")
+    품사_태그 = models.CharField(max_length=50, db_column="pos_tag", db_index=True)
+    의미_부류 = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        choices=SemanticClass.choices,
+        default=SemanticClass.NONE,
+        db_column="semantic_class",
+        verbose_name="의미 부류",
+    )
     종성_유무 = models.CharField(max_length=1, db_column="final_consonant")
     읽기 = models.CharField(max_length=100, db_column="reading", db_index=True)
     타입 = models.CharField(max_length=100, blank=True, null=True, db_column="type")
@@ -72,6 +132,14 @@ class Mecab_Ko_Dic(models.Model):
         verbose_name="출처",
     )
     is_active = models.BooleanField(default=True, db_column="is_active", db_index=True, verbose_name="활성 여부")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["표층형", "품사_태그"],
+                name="unique_surface_pos"
+            )
+        ]
 
     def __str__(self):
         return self.표층형

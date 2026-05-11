@@ -5,7 +5,7 @@ from mecab_ko_dic.models import Mecab_Ko_Dic, OriginType, PosTag
 
 
 class Command(BaseCommand):
-    help = "Import MeCab dictionary from CSV file"
+    help = "Import MeCab dictionary from CSV file with duplicate handling (Update if exists)"
 
     def add_arguments(self, parser):
         parser.add_argument("file_path", type=str, help="Path to the CSV file")
@@ -16,7 +16,7 @@ class Command(BaseCommand):
             default=OriginType.SYSTEM.value,
             help="Origin type (SYSTEM, USER, COMPOUND)",
         )
-        parser.add_argument("--batch_size", type=int, default=1000, help="Batch size for bulk_create")
+        parser.add_argument("--batch_size", type=int, default=1000, help="Batch size for bulk_create/update")
         parser.add_argument("--encoding", type=str, default="utf-8", help="File encoding (default: utf-8)")
 
     def handle(self, *args, **options):
@@ -29,6 +29,9 @@ class Command(BaseCommand):
         success_count = 0
         error_count = 0
         errors = []
+
+        # Get valid POS tags for validation
+        valid_pos_tags = set(PosTag.values)
 
         try:
             with open(file_path, "r", encoding=encoding, newline="") as f:
@@ -50,20 +53,20 @@ class Command(BaseCommand):
                             continue
 
                         pos_tag = row[4]
-                        if len(pos_tag) > 4:
-                            error_msg = f"Line {line_num}: pos_tag too long: '{pos_tag}'"
+                        
+                        # Validate POS tag (Allow complex tags like VV+EC)
+                        is_valid_pos = True
+                        for tag in pos_tag.split('+'):
+                            if tag not in valid_pos_tags and tag != '*':
+                                is_valid_pos = False
+                                break
+                        
+                        if not is_valid_pos:
+                            error_msg = f"Line {line_num}: Invalid POS tag '{pos_tag}'"
                             self.stderr.write(self.style.ERROR(error_msg))
                             errors.append(error_msg)
                             error_count += 1
                             continue
-                        
-                        # Validate pos_tag exists in PosTag choices
-                        if pos_tag not in [choice[0] for choice in PosTag.choices]:
-                             error_msg = f"Line {line_num}: Invalid pos_tag: '{pos_tag}'"
-                             self.stderr.write(self.style.ERROR(error_msg))
-                             errors.append(error_msg)
-                             error_count += 1
-                             continue
 
                         try:
                             entry = Mecab_Ko_Dic(
@@ -88,23 +91,20 @@ class Command(BaseCommand):
                             continue
 
                         if len(batch) >= batch_size:
-                            Mecab_Ko_Dic.objects.bulk_create(batch)
+                            self._bulk_upsert(batch)
                             batch = []
-                            self.stdout.write(f"Imported {success_count} entries...")
+                            self.stdout.write(f"Processed {success_count} entries...")
 
                     if batch:
-                        Mecab_Ko_Dic.objects.bulk_create(batch)
+                        self._bulk_upsert(batch)
 
                     if error_count > 0:
-                        # If the user wants "entire file succeeds or fails together",
-                        # we should probably raise an exception if there are ANY errors.
-                        # The prompt says: "ensure the entire batch (or entire file) succeeds or fails together."
                         raise CommandError(f"Import failed with {error_count} errors. Rolling back.")
 
                 self.stdout.write(self.style.SUCCESS(
                     f"\nImport Summary:\n"
                     f"Total rows processed: {processed_count}\n"
-                    f"Successfully imported: {success_count}\n"
+                    f"Successfully imported/updated: {success_count}\n"
                     f"Errors: {error_count}"
                 ))
 
@@ -113,7 +113,26 @@ class Command(BaseCommand):
         except UnicodeDecodeError:
             raise CommandError(f"Failed to decode file with encoding '{encoding}'. Try specifying a different encoding.")
         except CommandError as e:
-            # Re-raise CommandError to show the "Import failed" message
             raise e
         except Exception as e:
             raise CommandError(f"An unexpected error occurred: {str(e)}")
+
+    def _bulk_upsert(self, batch):
+        """
+        Performs a bulk update or create (UPSERT) based on 표층형 and 품사_태그.
+        Deduplicates within the batch to avoid PostgreSQL 'ON CONFLICT DO UPDATE command cannot affect row a second time'.
+        """
+        # Deduplicate within the batch (keep the last one)
+        unique_batch = {}
+        for entry in batch:
+            unique_batch[(entry.표층형, entry.품사_태그)] = entry
+        
+        Mecab_Ko_Dic.objects.bulk_create(
+            unique_batch.values(),
+            update_conflicts=True,
+            unique_fields=["표층형", "품사_태그"],
+            update_fields=[
+                "의미_부류", "종성_유무", "읽기", "타입", 
+                "첫번째_품사", "마지막_품사", "표현", "origin_type"
+            ]
+        )

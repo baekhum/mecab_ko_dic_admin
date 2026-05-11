@@ -164,3 +164,8 @@ cython_debug/
 http-client.private.env.json
 http-client.env.json
 env/data/
+.superpowers/
+.gitignore
+.claude/
+.gitignore
+DEST/

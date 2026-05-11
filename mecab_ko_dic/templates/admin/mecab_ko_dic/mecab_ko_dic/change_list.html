@@ -1,0 +1,11 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+    <li>
+        <a href="export-user-dic-bundle/{% if is_popup %}?_popup=1{% endif %}" class="addlink">
+            {% trans "사용자 사전 번들(ZIP) Export" %}
+        </a>
+    </li>
+    {{ block.super }}
+{% endblock %}

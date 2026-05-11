@@ -99,3 +99,24 @@ build-mecab:
 # Access the builder container's shell for manual work
 mecab-shell:
     docker-compose -f env/docker-compose.yaml exec mecab_ko_dic_builder bash
+
+# --- Data Management ---
+# Import all MeCab system dictionary CSV files
+import-all:
+    #!/usr/bin/env bash
+    for csv_file in env/data/ubuntu/sources/mecab-ko-dic-2.1.1-20180720/*.csv; do
+        echo "Importing system dic: $csv_file..."
+        uv run python manage.py import_mecab_csv "$csv_file" --type SYSTEM
+    done
+
+# Import all MeCab user dictionary CSV files
+import-user:
+    #!/usr/bin/env bash
+    for csv_file in env/data/ubuntu/sources/mecab-ko-dic-2.1.1-20180720/user-dic/*.csv; do
+        echo "Importing user dic: $csv_file..."
+        uv run python manage.py import_mecab_csv "$csv_file" --type USER
+    done
+
+# Export user-defined place names to CSV
+export-user-places:
+    uv run python manage.py export_mecab_csv "user-place-names.csv" --type USER --category "지명"
