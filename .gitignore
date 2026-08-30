@@ -125,6 +125,7 @@ celerybeat.pid
 
 # Environments
 .venv
+.worktrees/
 
 # Spyder project settings
 .spyderproject
