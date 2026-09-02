@@ -25,6 +25,9 @@ class Command(BaseCommand):
         batch_size = options["batch_size"]
         encoding = options["encoding"]
 
+        if batch_size <= 0:
+            raise CommandError("batch_size must be greater than 0")
+
         processed_count = 0
         success_count = 0
         error_count = 0
@@ -45,8 +48,15 @@ class Command(BaseCommand):
                             continue
 
                         # Basic validation
-                        if len(row) < 5:
-                            error_msg = f"Line {line_num}: Malformed row (not enough fields)"
+                        if len(row) != 12:
+                            error_msg = f"Line {line_num}: Malformed row (expected 12 fields, got {len(row)})"
+                            self.stderr.write(self.style.ERROR(error_msg))
+                            errors.append(error_msg)
+                            error_count += 1
+                            continue
+
+                        if not row[0].strip() or not row[4].strip() or not row[7].strip():
+                            error_msg = f"Line {line_num}: Required value is empty"
                             self.stderr.write(self.style.ERROR(error_msg))
                             errors.append(error_msg)
                             error_count += 1
@@ -63,6 +73,13 @@ class Command(BaseCommand):
                         
                         if not is_valid_pos:
                             error_msg = f"Line {line_num}: Invalid POS tag '{pos_tag}'"
+                            self.stderr.write(self.style.ERROR(error_msg))
+                            errors.append(error_msg)
+                            error_count += 1
+                            continue
+
+                        if row[6] not in {"T", "F", "*"}:
+                            error_msg = f"Line {line_num}: Invalid final consonant '{row[6]}'"
                             self.stderr.write(self.style.ERROR(error_msg))
                             errors.append(error_msg)
                             error_count += 1

@@ -1,11 +1,20 @@
 import os
 import tempfile
+from io import StringIO
+
 from django.core.management import call_command, CommandError
 from django.test import TestCase
 from mecab_ko_dic.models import Mecab_Ko_Dic, OriginType
 
 
 class ImportMecabCsvTest(TestCase):
+    def create_csv(self, content):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as file:
+            file.write(content)
+            path = file.name
+        self.addCleanup(lambda: os.path.exists(path) and os.remove(path))
+        return path
+
     def test_import_mecab_csv(self):
         # Create a sample CSV
         # 0:표층형, 1:LID, 2:RID, 3:Cost, 4:품사_태그, 5:의미_부류, 6:종성_유무, 7:읽기, 8:타입, 9:첫번째_품사, 10:마지막_품사, 11:표현
@@ -93,3 +102,52 @@ class ImportMecabCsvTest(TestCase):
         finally:
             if os.path.exists(tmp_file_path):
                 os.remove(tmp_file_path)
+
+    def test_import_rejects_rows_that_do_not_have_exactly_twelve_columns(self):
+        cases = {
+            "too few": "단어,0,0,0,NNG,*,T,단어,*,*,*\n",
+            "too many": "단어,0,0,0,NNG,*,T,단어,*,*,*,*,extra\n",
+        }
+
+        for label, content in cases.items():
+            with self.subTest(label=label):
+                stderr = StringIO()
+                with self.assertRaises(CommandError):
+                    call_command("import_mecab_csv", self.create_csv(content), stderr=stderr)
+                self.assertIn("expected 12 fields", stderr.getvalue())
+                self.assertEqual(Mecab_Ko_Dic.objects.count(), 0)
+
+    def test_import_rejects_invalid_final_consonant(self):
+        stderr = StringIO()
+
+        with self.assertRaises(CommandError):
+            call_command(
+                "import_mecab_csv",
+                self.create_csv("단어,0,0,0,NNG,*,X,단어,*,*,*,*\n"),
+                stderr=stderr,
+            )
+
+        self.assertIn("Invalid final consonant 'X'", stderr.getvalue())
+        self.assertEqual(Mecab_Ko_Dic.objects.count(), 0)
+
+    def test_import_rejects_empty_required_values(self):
+        cases = {
+            "surface": ",0,0,0,NNG,*,T,단어,*,*,*,*\n",
+            "reading": "단어,0,0,0,NNG,*,T,,*,*,*,*\n",
+        }
+
+        for field, content in cases.items():
+            with self.subTest(field=field):
+                stderr = StringIO()
+                with self.assertRaises(CommandError):
+                    call_command("import_mecab_csv", self.create_csv(content), stderr=stderr)
+                self.assertIn("Required value is empty", stderr.getvalue())
+                self.assertEqual(Mecab_Ko_Dic.objects.count(), 0)
+
+    def test_import_rejects_non_positive_batch_size(self):
+        with self.assertRaisesMessage(CommandError, "batch_size must be greater than 0"):
+            call_command(
+                "import_mecab_csv",
+                self.create_csv("단어,0,0,0,NNG,*,T,단어,*,*,*,*\n"),
+                batch_size=0,
+            )
