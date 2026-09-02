@@ -72,7 +72,7 @@ class ImportMecabCsvTest(TestCase):
         try:
             with self.assertRaises(CommandError) as cm:
                 call_command("import_mecab_csv", tmp_file_path)
-            
+
             self.assertIn("Import failed with 3 errors", str(cm.exception))
             # Due to transaction.atomic, no records should be saved
             self.assertEqual(Mecab_Ko_Dic.objects.count(), 0)
@@ -84,7 +84,7 @@ class ImportMecabCsvTest(TestCase):
     def test_import_with_encoding(self):
         # Test importing with EUC-KR encoding
         csv_content = "한글,0,0,0,NNG,*,T,한글,*,*,*,*\n"
-        
+
         with tempfile.NamedTemporaryFile(mode="wb", suffix=".csv", delete=False) as f:
             f.write(csv_content.encode("euc-kr"))
             tmp_file_path = f.name
@@ -93,7 +93,7 @@ class ImportMecabCsvTest(TestCase):
             # Should fail with utf-8 (default)
             with self.assertRaises(CommandError):
                 call_command("import_mecab_csv", tmp_file_path, encoding="utf-8")
-            
+
             # Should succeed with euc-kr
             call_command("import_mecab_csv", tmp_file_path, encoding="euc-kr")
             self.assertEqual(Mecab_Ko_Dic.objects.count(), 1)
@@ -153,10 +153,7 @@ class ImportMecabCsvTest(TestCase):
             )
 
     def test_import_uses_last_duplicate_row_across_batches(self):
-        path = self.create_csv(
-            "중복,0,0,0,NNG,*,T,첫번째,*,*,*,*\n"
-            "중복,0,0,0,NNG,*,F,마지막,*,*,*,*\n"
-        )
+        path = self.create_csv("중복,0,0,0,NNG,*,T,첫번째,*,*,*,*\n" "중복,0,0,0,NNG,*,F,마지막,*,*,*,*\n")
 
         call_command("import_mecab_csv", path, batch_size=1)
 

@@ -4,18 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('mecab_ko_dic', '0009_mecab_ko_dic_unique_surface_pos'),
+        ("mecab_ko_dic", "0009_mecab_ko_dic_unique_surface_pos"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='mecab_ko_dic',
-            constraint=models.CheckConstraint(condition=models.Q(('origin_type__in', ['SYSTEM', 'USER', 'COMPOUND'])), name='mecab_origin_type_valid'),
+            model_name="mecab_ko_dic",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("origin_type__in", ["SYSTEM", "USER", "COMPOUND"])), name="mecab_origin_type_valid"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='mecab_ko_dic',
-            constraint=models.CheckConstraint(condition=models.Q(('종성_유무__in', ['T', 'F', '*'])), name='mecab_final_consonant_valid'),
+            model_name="mecab_ko_dic",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("종성_유무__in", ["T", "F", "*"])), name="mecab_final_consonant_valid"
+            ),
         ),
     ]

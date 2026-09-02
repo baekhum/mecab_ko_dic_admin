@@ -65,13 +65,13 @@ class SemanticClass(models.TextChoices):
     NUMBER = "수", "수"
     ACTION = "행위", "행위"
     ULTRON = "울트론", "울트론"
-    
+
     # 세부 분류 및 특수 태그 (시트 및 DB 분석 결과 반영)
     COINED = "쉬도록", "쉬도록"
     SENTENCE_ADV = "문장부사", "문장부사"
     STATUS_CHANGE = "상태변화", "상태변화"
     STATIC_STATE = "정적사태", "정적사태"
-    
+
     # MeCab 특수 분류 (~로 시작)
     T_NOUN = "~명사", "~명사"
     T_NUMERAL = "~수사", "~수사"

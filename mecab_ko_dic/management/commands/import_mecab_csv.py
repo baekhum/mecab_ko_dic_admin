@@ -40,7 +40,7 @@ class Command(BaseCommand):
             with open(file_path, "r", encoding=encoding, newline="") as f:
                 reader = csv.reader(f)
                 batch = []
-                
+
                 with transaction.atomic():
                     for line_num, row in enumerate(reader, start=1):
                         processed_count += 1
@@ -63,14 +63,14 @@ class Command(BaseCommand):
                             continue
 
                         pos_tag = row[4]
-                        
+
                         # Validate POS tag (Allow complex tags like VV+EC)
                         is_valid_pos = True
-                        for tag in pos_tag.split('+'):
-                            if tag not in valid_pos_tags and tag != '*':
+                        for tag in pos_tag.split("+"):
+                            if tag not in valid_pos_tags and tag != "*":
                                 is_valid_pos = False
                                 break
-                        
+
                         if not is_valid_pos:
                             error_msg = f"Line {line_num}: Invalid POS tag '{pos_tag}'"
                             self.stderr.write(self.style.ERROR(error_msg))
@@ -118,17 +118,21 @@ class Command(BaseCommand):
                     if error_count > 0:
                         raise CommandError(f"Import failed with {error_count} errors. Rolling back.")
 
-                self.stdout.write(self.style.SUCCESS(
-                    f"\nImport Summary:\n"
-                    f"Total rows processed: {processed_count}\n"
-                    f"Successfully imported/updated: {success_count}\n"
-                    f"Errors: {error_count}"
-                ))
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"\nImport Summary:\n"
+                        f"Total rows processed: {processed_count}\n"
+                        f"Successfully imported/updated: {success_count}\n"
+                        f"Errors: {error_count}"
+                    )
+                )
 
         except FileNotFoundError:
             raise CommandError(f'File "{file_path}" does not exist')
         except UnicodeDecodeError:
-            raise CommandError(f"Failed to decode file with encoding '{encoding}'. Try specifying a different encoding.")
+            raise CommandError(
+                f"Failed to decode file with encoding '{encoding}'. Try specifying a different encoding."
+            )
         except CommandError as e:
             raise e
         except Exception as e:
@@ -143,13 +147,19 @@ class Command(BaseCommand):
         unique_batch = {}
         for entry in batch:
             unique_batch[(entry.표층형, entry.품사_태그)] = entry
-        
+
         Mecab_Ko_Dic.objects.bulk_create(
             unique_batch.values(),
             update_conflicts=True,
             unique_fields=["표층형", "품사_태그"],
             update_fields=[
-                "의미_부류", "종성_유무", "읽기", "타입", 
-                "첫번째_품사", "마지막_품사", "표현", "origin_type"
-            ]
+                "의미_부류",
+                "종성_유무",
+                "읽기",
+                "타입",
+                "첫번째_품사",
+                "마지막_품사",
+                "표현",
+                "origin_type",
+            ],
         )
