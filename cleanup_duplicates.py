@@ -4,8 +4,8 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mecab_ko_dic_admin.config.settings')
 django.setup()
 
-from mecab_ko_dic.models import Mecab_Ko_Dic
-from django.db.models import Count, Min
+from mecab_ko_dic.models import Mecab_Ko_Dic  # noqa: E402
+from django.db.models import Count, Min  # noqa: E402
 
 def run_cleanup():
     print("Finding duplicates...")
