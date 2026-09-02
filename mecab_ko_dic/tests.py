@@ -1,5 +1,7 @@
-from django.test import TestCase
+from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
+from django.test import TestCase
+
 from mecab_ko_dic.models import Mecab_Ko_Dic, OriginType, SynonymGroup, SynonymWord, Stopword
 
 # Create your tests here.
@@ -31,6 +33,34 @@ class MecabModelTest(TestCase):
                 종성_유무="X",
                 읽기="잘못된 종성",
             )
+
+    def test_model_validation_rejects_invalid_pos_tag(self):
+        entry = Mecab_Ko_Dic(
+            표층형="잘못된 품사",
+            품사_태그="INVALID",
+            종성_유무="T",
+            읽기="잘못된 품사",
+        )
+
+        with self.assertRaises(ValidationError):
+            entry.full_clean()
+
+    def test_model_validation_accepts_compound_pos_tag(self):
+        entry = Mecab_Ko_Dic(
+            표층형="복합 품사",
+            품사_태그="NNG+NNG",
+            종성_유무="T",
+            읽기="복합 품사",
+        )
+
+        entry.full_clean()
+
+    def test_search_and_filter_fields_are_indexed(self):
+        indexed_fields = ["표층형", "품사_태그", "읽기", "origin_type", "is_active"]
+
+        for field_name in indexed_fields:
+            with self.subTest(field=field_name):
+                self.assertTrue(Mecab_Ko_Dic._meta.get_field(field_name).db_index)
 
 
 class SearchDicTest(TestCase):

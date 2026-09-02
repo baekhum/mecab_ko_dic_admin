@@ -64,10 +64,10 @@ class Command(BaseCommand):
 
                         pos_tag = row[4]
 
-                        # Validate POS tag (Allow complex tags like VV+EC)
+                        # Validate POS tag (allow complex tags like VV+EC)
                         is_valid_pos = True
                         for tag in pos_tag.split("+"):
-                            if tag not in valid_pos_tags and tag != "*":
+                            if tag not in valid_pos_tags:
                                 is_valid_pos = False
                                 break
 

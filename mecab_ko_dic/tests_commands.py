@@ -130,6 +130,19 @@ class ImportMecabCsvTest(TestCase):
         self.assertIn("Invalid final consonant 'X'", stderr.getvalue())
         self.assertEqual(Mecab_Ko_Dic.objects.count(), 0)
 
+    def test_import_rejects_placeholder_pos_tag(self):
+        stderr = StringIO()
+
+        with self.assertRaises(CommandError):
+            call_command(
+                "import_mecab_csv",
+                self.create_csv("단어,0,0,0,*,*,T,단어,*,*,*,*\n"),
+                stderr=stderr,
+            )
+
+        self.assertIn("Invalid POS tag '*'", stderr.getvalue())
+        self.assertEqual(Mecab_Ko_Dic.objects.count(), 0)
+
     def test_import_rejects_empty_required_values(self):
         cases = {
             "surface": ",0,0,0,NNG,*,T,단어,*,*,*,*\n",

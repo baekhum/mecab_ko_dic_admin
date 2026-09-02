@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -48,6 +49,16 @@ class PosTag(models.TextChoices):
     NA = "NA", "미정의"
     UNA = "UNA", "해석불가"
     VSV = "VSV", "동사 파생 접미사(V)"
+
+
+def validate_pos_tag(value):
+    invalid_tags = [tag for tag in value.split("+") if tag not in PosTag.values]
+    if invalid_tags:
+        raise ValidationError(
+            "Unsupported POS tag: %(tags)s",
+            code="invalid_pos_tag",
+            params={"tags": ", ".join(invalid_tags)},
+        )
 
 
 class OriginType(models.TextChoices):
@@ -107,7 +118,7 @@ class SemanticClass(models.TextChoices):
 
 class Mecab_Ko_Dic(models.Model):
     표층형 = models.CharField(max_length=100, db_column="surface_form", db_index=True)
-    품사_태그 = models.CharField(max_length=50, db_column="pos_tag", db_index=True)
+    품사_태그 = models.CharField(max_length=50, db_column="pos_tag", db_index=True, validators=[validate_pos_tag])
     의미_부류 = models.CharField(
         max_length=100,
         blank=True,
