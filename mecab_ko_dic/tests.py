@@ -17,6 +17,25 @@ class MecabModelTest(TestCase):
         self.assertEqual(entry.origin_type, "USER")
         self.assertTrue(entry.is_active)
 
+    def test_rejects_invalid_origin_type(self):
+        with self.assertRaises(IntegrityError):
+            Mecab_Ko_Dic.objects.create(
+                표층형="잘못된 출처",
+                품사_태그="NNG",
+                종성_유무="T",
+                읽기="잘못된 출처",
+                origin_type="INVALID",
+            )
+
+    def test_rejects_invalid_final_consonant(self):
+        with self.assertRaises(IntegrityError):
+            Mecab_Ko_Dic.objects.create(
+                표층형="잘못된 종성",
+                품사_태그="NNG",
+                종성_유무="X",
+                읽기="잘못된 종성",
+            )
+
 class SearchDicTest(TestCase):
     def test_synonym_group_and_words(self):
         group = SynonymGroup.objects.create(name="휴대폰 그룹")

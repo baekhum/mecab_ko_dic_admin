@@ -137,8 +137,16 @@ class Mecab_Ko_Dic(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["표층형", "품사_태그"],
-                name="unique_surface_pos"
-            )
+                name="unique_surface_pos",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(origin_type__in=OriginType.values),
+                name="mecab_origin_type_valid",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(종성_유무__in=["T", "F", "*"]),
+                name="mecab_final_consonant_valid",
+            ),
         ]
 
     def __str__(self):
