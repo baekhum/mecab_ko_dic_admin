@@ -151,3 +151,45 @@ class ImportMecabCsvTest(TestCase):
                 self.create_csv("단어,0,0,0,NNG,*,T,단어,*,*,*,*\n"),
                 batch_size=0,
             )
+
+    def test_import_uses_last_duplicate_row_across_batches(self):
+        path = self.create_csv(
+            "중복,0,0,0,NNG,*,T,첫번째,*,*,*,*\n"
+            "중복,0,0,0,NNG,*,F,마지막,*,*,*,*\n"
+        )
+
+        call_command("import_mecab_csv", path, batch_size=1)
+
+        self.assertEqual(Mecab_Ko_Dic.objects.count(), 1)
+        entry = Mecab_Ko_Dic.objects.get(표층형="중복", 품사_태그="NNG")
+        self.assertEqual(entry.읽기, "마지막")
+        self.assertEqual(entry.종성_유무, "F")
+
+    def test_import_updates_fields_and_preserves_active_state(self):
+        entry = Mecab_Ko_Dic.objects.create(
+            표층형="보존",
+            품사_태그="NNG",
+            종성_유무="T",
+            읽기="이전",
+            origin_type=OriginType.SYSTEM,
+            is_active=False,
+        )
+        path = self.create_csv("보존,0,0,0,NNG,*,F,이후,*,*,*,*\n")
+
+        call_command("import_mecab_csv", path, type="USER")
+
+        entry.refresh_from_db()
+        self.assertEqual(entry.읽기, "이후")
+        self.assertEqual(entry.종성_유무, "F")
+        self.assertEqual(entry.origin_type, OriginType.USER)
+        self.assertFalse(entry.is_active)
+
+    def test_import_is_idempotent_for_the_same_file(self):
+        fixture_path = os.path.join(os.path.dirname(__file__), "testdata", "mecab_sample.csv")
+
+        call_command("import_mecab_csv", fixture_path, type="SYSTEM")
+        first_count = Mecab_Ko_Dic.objects.count()
+        call_command("import_mecab_csv", fixture_path, type="SYSTEM")
+
+        self.assertEqual(first_count, 2)
+        self.assertEqual(Mecab_Ko_Dic.objects.count(), first_count)
