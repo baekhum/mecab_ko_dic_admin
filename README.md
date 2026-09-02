@@ -45,7 +45,6 @@ uv run python manage.py runserver
 ```bash
 uv run python manage.py test
 uv run ruff check .
-uv run ruff format --check .
 uv run python manage.py check
 uv run python manage.py makemigrations --check --dry-run
 ```

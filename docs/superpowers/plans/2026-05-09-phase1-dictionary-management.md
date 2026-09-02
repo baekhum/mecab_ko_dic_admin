@@ -1,4 +1,6 @@
-# Phase 1: Dictionary Management Active Implementation Plan
+# Phase 1: Dictionary Management Implementation Plan
+
+**Status:** Completed on 2026-09-02. Implementation commits: `ea42000`, `2a6469a`, `6db3a1f`, `23d8325`, `646ba4d`, `5eb72cf`, `51fdaff`, `88585dc`, `8deaac8`, `ac47722`.
 
 > **Execution rule:** Work task-by-task using test-driven development. Do not recreate existing models, commands, or migrations merely because they appear in the historical Phase 1 scope. Verify the current baseline first and implement only demonstrated gaps.
 
@@ -18,7 +20,7 @@
 - Follow: `docs/superpowers/plans/2026-08-30-python-django-version-alignment.md`
 - Verify: `.python-version`, `pyproject.toml`, `uv.lock`
 
-- [ ] **Step 1: Verify the selected runtime**
+- [x] **Step 1: Verify the selected runtime**
 
 Run:
 
@@ -29,7 +31,7 @@ uv run python -m django --version
 
 Expected: Python 3.12.x and Django 5.2.x.
 
-- [ ] **Step 2: Resolve a failed prerequisite**
+- [x] **Step 2: Resolve a failed prerequisite**
 
 If either version is outside the required range, stop this plan and execute `docs/superpowers/plans/2026-08-30-python-django-version-alignment.md`. Resume Phase 1 only after both version checks pass.
 
@@ -43,7 +45,7 @@ If either version is outside the required range, stop this plan and execute `doc
 - Verify: `mecab_ko_dic/tests_commands.py`
 - Verify: `mecab_ko_dic/migrations/`
 
-- [ ] **Step 1: Verify Django model and migration consistency**
+- [x] **Step 1: Verify Django model and migration consistency**
 
 Run:
 
@@ -54,7 +56,7 @@ uv run python manage.py showmigrations mecab_ko_dic
 
 Expected: no model changes are missing from migrations; all expected app migrations are listed.
 
-- [ ] **Step 2: Run the focused baseline tests**
+- [x] **Step 2: Run the focused baseline tests**
 
 Run:
 
@@ -64,7 +66,7 @@ uv run python manage.py test mecab_ko_dic.tests mecab_ko_dic.tests_commands
 
 Expected: the existing model and import tests pass. A failure becomes the first gap to fix; do not proceed by assuming the baseline is valid.
 
-- [ ] **Step 3: Record the baseline result**
+- [x] **Step 3: Record the baseline result**
 
 In the implementation change description, record the commands, pass/fail result, and any gap mapped to the design section it violates. Do not create a source-code commit when verification produces no changes.
 
@@ -75,7 +77,7 @@ In the implementation change description, record the commands, pass/fail result,
 - Create if required: the next migration reported by `makemigrations`
 - Modify: `mecab_ko_dic/tests.py`
 
-- [ ] **Step 1: Add failing tests for uncovered invariants**
+- [x] **Step 1: Add failing tests for uncovered invariants**
 
 Cover at minimum:
 
@@ -88,11 +90,11 @@ Cover at minimum:
 
 Run the new tests and confirm they fail for the missing behavior rather than an unrelated setup error.
 
-- [ ] **Step 2: Implement only the missing constraints or validators**
+- [x] **Step 2: Implement only the missing constraints or validators**
 
 Prefer database constraints for finite-value and uniqueness rules. Keep validation definitions close to the owning model and use stable, descriptive constraint names.
 
-- [ ] **Step 3: Generate and inspect the migration**
+- [x] **Step 3: Generate and inspect the migration**
 
 Run:
 
@@ -104,7 +106,7 @@ uv run python manage.py migrate
 
 Inspect the SQL for unintended table rebuilds, dropped constraints, or destructive data conversions.
 
-- [ ] **Step 4: Verify and commit the complete schema change**
+- [x] **Step 4: Verify and commit the complete schema change**
 
 Run:
 
@@ -122,7 +124,7 @@ Commit `models.py`, its tests, and every generated migration in the same commit.
 - Modify: `mecab_ko_dic/tests_commands.py`
 - Add: `mecab_ko_dic/testdata/mecab_sample.csv`
 
-- [ ] **Step 1: Add failing contract tests**
+- [x] **Step 1: Add failing contract tests**
 
 Use temporary files except for the committed representative fixture. Cover:
 
@@ -139,11 +141,11 @@ Use temporary files except for the committed representative fixture. Cover:
 
 Run each new test before implementation and confirm the expected contract failure.
 
-- [ ] **Step 2: Implement the smallest changes needed**
+- [x] **Step 2: Implement the smallest changes needed**
 
 Retain `transaction.atomic()` around the complete file import. Validate rows before committing, deduplicate by `(표층형, 품사_태그)`, and use Django bulk UPSERT with explicit `unique_fields` and `update_fields`. Do not include `is_active` in `update_fields`.
 
-- [ ] **Step 3: Run focused command tests**
+- [x] **Step 3: Run focused command tests**
 
 Run:
 
@@ -153,7 +155,7 @@ uv run python manage.py test mecab_ko_dic.tests_commands
 
 Expected: all normal, duplicate, encoding, and rollback paths pass.
 
-- [ ] **Step 4: Verify a representative import**
+- [x] **Step 4: Verify a representative import**
 
 Run the committed fixture twice against the test or disposable development database:
 
@@ -164,7 +166,7 @@ uv run python manage.py import_mecab_csv mecab_ko_dic/testdata/mecab_sample.csv 
 
 Confirm the second run does not increase the number of rows for the fixture keys. Do not use the full external MeCab corpus as an automated completion test.
 
-- [ ] **Step 5: Commit the import contract**
+- [x] **Step 5: Commit the import contract**
 
 Commit the command, tests, and fixture together. If all contract tests already pass without implementation changes, commit only newly added tests and the fixture.
 
@@ -174,7 +176,7 @@ Commit the command, tests, and fixture together. If all contract tests already p
 - Modify if required: `mecab_ko_dic/admin.py`
 - Add or modify: `mecab_ko_dic/tests_admin.py`
 
-- [ ] **Step 1: Add failing Admin tests**
+- [x] **Step 1: Add failing Admin tests**
 
 Cover:
 
@@ -185,11 +187,11 @@ Cover:
 - synonym words are managed through `SynonymGroupAdmin` inline;
 - stopwords are searchable.
 
-- [ ] **Step 2: Implement only demonstrated gaps**
+- [x] **Step 2: Implement only demonstrated gaps**
 
 Keep custom filters and permission logic isolated in named Admin classes. Avoid changing model behavior from Admin code.
 
-- [ ] **Step 3: Verify and commit**
+- [x] **Step 3: Verify and commit**
 
 Run:
 
@@ -204,7 +206,7 @@ Commit `admin.py` and `tests_admin.py` together. If existing behavior already sa
 **Files:**
 - Verify only unless a failure demonstrates an in-scope defect
 
-- [ ] **Step 1: Apply migrations and run all checks**
+- [x] **Step 1: Apply migrations and run all checks**
 
 Run:
 
@@ -218,7 +220,7 @@ uv run python manage.py makemigrations --check --dry-run
 
 Expected: every command exits successfully, all tests pass, and Django reports no pending model changes.
 
-- [ ] **Step 2: Review the final diff**
+- [x] **Step 2: Review the final diff**
 
 Run:
 
@@ -229,6 +231,6 @@ git status --short
 
 Confirm that only Phase 1 files and pre-existing unrelated changes appear. Do not stage unrelated files.
 
-- [ ] **Step 3: Update document status after verified completion**
+- [x] **Step 3: Update document status after verified completion**
 
 Only after every check above passes, change the design status from `Active` to `Completed`, add the completion date and implementation commit references, and mark this plan's completed checkboxes. Until then, keep both documents active.

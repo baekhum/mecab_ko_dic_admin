@@ -1,5 +1,7 @@
 # Python and Django Version Alignment Implementation Plan
 
+**Status:** Completed on 2026-09-02 in commits `ea42000` and `2a6469a`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Standardize the local development environment on Python 3.12 and Django 5.2 LTS with reproducible dependencies and current documentation.
@@ -16,7 +18,7 @@
 - Create: `.python-version`
 - Modify: `pyproject.toml:7-16`
 
-- [ ] **Step 1: Set the Python selector**
+- [x] **Step 1: Set the Python selector**
 
 Create `.python-version` containing exactly:
 
@@ -24,7 +26,7 @@ Create `.python-version` containing exactly:
 3.12
 ```
 
-- [ ] **Step 2: Constrain supported runtime versions**
+- [x] **Step 2: Constrain supported runtime versions**
 
 Set the project metadata to:
 
@@ -37,7 +39,7 @@ dependencies = [
 
 Keep the existing non-Django dependencies unchanged.
 
-- [ ] **Step 3: Confirm uv selects Python 3.12**
+- [x] **Step 3: Confirm uv selects Python 3.12**
 
 Run: `uv run python --version`
 
@@ -48,13 +50,13 @@ Expected: output starts with `Python 3.12.`
 **Files:**
 - Modify: `uv.lock`
 
-- [ ] **Step 1: Regenerate the lock file**
+- [x] **Step 1: Regenerate the lock file**
 
 Run: `uv lock --python 3.12`
 
 Expected: successful resolution with `requires-python = ">=3.12,<3.13"` and a Django 5.2.x package.
 
-- [ ] **Step 2: Synchronize the environment**
+- [x] **Step 2: Synchronize the environment**
 
 Run: `uv sync --python 3.12`
 
@@ -67,7 +69,7 @@ Expected: dependencies install successfully without building the Python 3.14-inc
 - Modify: `docs/superpowers/specs/2026-05-09-phase1-dictionary-management-design.md`
 - Modify: `docs/superpowers/plans/2026-05-09-phase1-dictionary-management.md`
 
-- [ ] **Step 1: Replace the placeholder README**
+- [x] **Step 1: Replace the placeholder README**
 
 Document:
 
@@ -76,7 +78,7 @@ Document:
 - MeCab CSV import and export command examples.
 - `/admin/` as the current user interface.
 
-- [ ] **Step 2: Record the stack in the Phase 1 design**
+- [x] **Step 2: Record the stack in the Phase 1 design**
 
 Add a technology stack section specifying:
 
@@ -87,7 +89,7 @@ PostgreSQL
 uv
 ```
 
-- [ ] **Step 3: Record the prerequisite in the Phase 1 plan**
+- [x] **Step 3: Record the prerequisite in the Phase 1 plan**
 
 Add an environment prerequisite stating that all commands assume Python 3.12 and Django 5.2 LTS as locked by `uv.lock`.
 
@@ -96,25 +98,25 @@ Add an environment prerequisite stating that all commands assume Python 3.12 and
 **Files:**
 - Verify only; no application code changes expected
 
-- [ ] **Step 1: Verify selected versions**
+- [x] **Step 1: Verify selected versions**
 
 Run: `uv run python --version && uv run python -m django --version`
 
 Expected: Python 3.12.x and Django 5.2.x.
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `uv run pytest -q`
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Run static and Django checks**
+- [x] **Step 3: Run static and Django checks**
 
 Run: `uv run ruff check . && uv run python manage.py check`
 
 Expected: both commands exit successfully. If Ruff reports pre-existing style issues, report them separately rather than changing unrelated application code.
 
-- [ ] **Step 4: Review the diff**
+- [x] **Step 4: Review the diff**
 
 Run: `git diff --check && git status --short`
 
