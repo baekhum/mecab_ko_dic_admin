@@ -175,6 +175,16 @@ class ImportMecabCsvTest(TestCase):
         self.assertEqual(entry.읽기, "마지막")
         self.assertEqual(entry.종성_유무, "F")
 
+    def test_import_uses_last_duplicate_row_within_a_batch(self):
+        path = self.create_csv("중복,0,0,0,NNG,*,T,첫번째,*,*,*,*\n" "중복,0,0,0,NNG,*,F,마지막,*,*,*,*\n")
+
+        call_command("import_mecab_csv", path, batch_size=1000)
+
+        self.assertEqual(Mecab_Ko_Dic.objects.count(), 1)
+        entry = Mecab_Ko_Dic.objects.get(표층형="중복", 품사_태그="NNG")
+        self.assertEqual(entry.읽기, "마지막")
+        self.assertEqual(entry.종성_유무, "F")
+
     def test_import_updates_fields_and_preserves_active_state(self):
         entry = Mecab_Ko_Dic.objects.create(
             표층형="보존",
@@ -203,3 +213,31 @@ class ImportMecabCsvTest(TestCase):
 
         self.assertEqual(first_count, 2)
         self.assertEqual(Mecab_Ko_Dic.objects.count(), first_count)
+
+    def test_import_reports_a_success_summary(self):
+        stdout = StringIO()
+
+        call_command(
+            "import_mecab_csv",
+            self.create_csv("요약,0,0,0,NNG,*,T,요약,*,*,*,*\n"),
+            stdout=stdout,
+        )
+
+        output = stdout.getvalue()
+        self.assertIn("Total rows processed: 1", output)
+        self.assertIn("Successfully imported/updated: 1", output)
+        self.assertIn("Errors: 0", output)
+
+    def test_import_reports_a_missing_file(self):
+        missing_path = os.path.join(tempfile.gettempdir(), "missing-mecab-dictionary.csv")
+
+        with self.assertRaisesMessage(CommandError, f'File "{missing_path}" does not exist'):
+            call_command("import_mecab_csv", missing_path)
+
+    def test_import_rejects_invalid_origin_type(self):
+        with self.assertRaises(CommandError):
+            call_command(
+                "import_mecab_csv",
+                self.create_csv("단어,0,0,0,NNG,*,T,단어,*,*,*,*\n"),
+                type="INVALID",
+            )
