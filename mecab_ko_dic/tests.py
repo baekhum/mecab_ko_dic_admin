@@ -34,6 +34,22 @@ class MecabModelTest(TestCase):
                 읽기="잘못된 종성",
             )
 
+    def test_rejects_duplicate_surface_and_pos_tag(self):
+        Mecab_Ko_Dic.objects.create(
+            표층형="중복 단어",
+            품사_태그="NNG",
+            종성_유무="T",
+            읽기="중복 단어",
+        )
+
+        with self.assertRaises(IntegrityError):
+            Mecab_Ko_Dic.objects.create(
+                표층형="중복 단어",
+                품사_태그="NNG",
+                종성_유무="F",
+                읽기="다른 읽기",
+            )
+
     def test_model_validation_rejects_invalid_pos_tag(self):
         entry = Mecab_Ko_Dic(
             표층형="잘못된 품사",
