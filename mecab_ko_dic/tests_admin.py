@@ -27,6 +27,7 @@ class MecabDictionaryAdminTest(TestCase):
             품사_태그="NNP",
             종성_유무="F",
             읽기="검색대상",
+            의미_부류="사용자의미",
             origin_type=OriginType.USER,
         )
         cls.compound_entry = Mecab_Ko_Dic.objects.create(
@@ -63,6 +64,21 @@ class MecabDictionaryAdminTest(TestCase):
 
         self.assertEqual(results, [self.user_entry])
 
+    def test_searches_surface_form(self):
+        results = self.changelist_results(q="사용자단어")
+
+        self.assertEqual(results, [self.user_entry])
+
+    def test_searches_pos_tag(self):
+        results = self.changelist_results(q="NNP")
+
+        self.assertEqual(results, [self.user_entry])
+
+    def test_searches_semantic_class(self):
+        results = self.changelist_results(q="사용자의미")
+
+        self.assertEqual(results, [self.user_entry])
+
     def test_system_entry_is_read_only_and_cannot_be_deleted(self):
         model_admin = Mecab_Ko_Dic_Admin(Mecab_Ko_Dic, admin.site)
         request = RequestFactory().get("/admin/")
@@ -76,6 +92,14 @@ class MecabDictionaryAdminTest(TestCase):
         )
         self.assertTrue(model_admin.has_change_permission(request, self.user_entry))
         self.assertTrue(model_admin.has_delete_permission(request, self.user_entry))
+
+    def test_compound_entry_can_be_changed_and_deleted(self):
+        model_admin = Mecab_Ko_Dic_Admin(Mecab_Ko_Dic, admin.site)
+        request = RequestFactory().get("/admin/")
+        request.user = self.staff_user
+
+        self.assertTrue(model_admin.has_change_permission(request, self.compound_entry))
+        self.assertTrue(model_admin.has_delete_permission(request, self.compound_entry))
 
 
 class SearchDictionaryAdminTest(TestCase):
