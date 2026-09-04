@@ -1,6 +1,6 @@
 # Phase 1 Test Coverage Completion Design
 
-**Status:** Active
+**Status:** Completed on 2026-09-04. Implementation commits: `d71cff0`, `432df4d`.
 
 ## Context
 
@@ -49,4 +49,3 @@ Run focused tests after each test-only change, then run migrations, the full Dja
 2. Add dictionary uniqueness coverage.
 3. Complete Django Admin search and permission coverage.
 4. Record verified completion in the follow-up documents.
-
